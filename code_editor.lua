@@ -106,7 +106,7 @@ function code_editor.new(x, y, width, height)
 			background_color = color(26, 28, 36),
 			info_color = color(232, 118, 118),
 			line_number_color = color(191, 191, 191),
-			x_margin = 12,
+			x_margin = 3,
 			y_margin = 12,
 			tab = "    ",
 			syntax = {
@@ -131,26 +131,11 @@ function code_editor.new(x, y, width, height)
     return setmetatable(ce, code_editor_meta)
 end
 
--- Updates the cursor drawing position
-function code_editor:update_cursor()
-	self.cursor.draw_x = self.x + self.config.x_margin + (self.cursor.x - 1 - self.scroll.x) * self.font_width
-	self.cursor.draw_y = self.y + self.config.y_margin + (self.cursor.y - self.scroll.y) * self.font_height 
-
-	--Scrolling
-	--if self.cursor.x > self.max_line_width then
-	self.scroll.x = self.cursor.x - self.max_line_width
-	if self.scroll.x < 1 then
-		self.scroll.x = 1
-	end
-
-	--end
-end
-
 function code_editor:set_font(font)
     self.config.font = font
 	self.font_height = self.config.font:getAscent() - self.config.font:getDescent()
 	self.font_width = self.config.font:getWidth("W")
-	self.visible_lines = math.floor((self.height - self.config.y_margin * 2) / self.font_height) - 1
+	self.visible_lines = math.floor((self.height - (self.config.y_margin * 2) - self.font_height) / self.font_height) - 1
 	self.max_line_width = math.floor((self.width - (self.config.x_margin * 2)) / self.font_width)
 end
 
@@ -210,11 +195,29 @@ function code_editor:draw_line(line)
 
 	line = line - self.scroll.y
 
+
+	lg.setStencilTest("greater", 0)
 	lg.setColor(1, 1, 1, 1)
-	lg.print(colored_text, self.x + self.config.x_margin - (self.font_width * (self.scroll.x)), self.y + self.config.y_margin + (self.font_height * (line)))
+	lg.print(colored_text, self.x + (self.config.x_margin * 2) - (self.font_width * (self.scroll.x)), self.y + self.config.y_margin + (self.font_height * (line)))
+
+	--Line numbers
 	lg.setColor(self.config.line_number_color)
-	lg.printf(line + self.scroll.y, self.x - self.width + (self.config.x_margin * 0.9), self.y + self.config.y_margin + (self.font_height * (line)), self.width, "right")
-	--lg.printf(out, -12, self.y + self.config.y_margin + (self.font_height * (line - 1)), self.width, "right")
+	lg.print(line + self.scroll.y, self.x + self.config.x_margin, self.y + self.config.y_margin + (self.font_height * (line)))
+end
+
+-- Updates the cursor drawing position
+function code_editor:update_cursor()
+	self.cursor.draw_y = self.y + self.config.y_margin + (self.cursor.y - self.scroll.y) * self.font_height 
+	self.cursor.draw_x = self.x + (self.config.x_margin * 2) + (self.cursor.x - 1 - self.scroll.x) * self.font_width
+
+	--Scrolling
+	--if self.cursor.x > self.max_line_width then
+	self.scroll.x = self.cursor.x - self.max_line_width
+	if self.scroll.x < 1 then
+		self.scroll.x = 1
+	end
+
+	--end
 end
 
 -- Loads a file & replaces tabs with spaces
@@ -245,10 +248,11 @@ end
 function code_editor:draw()
 	local of = lg.getFont()
 	local r, g, b, a = lg.getColor()
-	local function sf()
+
+	local function stencil()
 		lg.rectangle("fill", self.x, self.y, self.width, self.height)
 	end
-	lg.stencil(sf)
+	lg.stencil(stencil)
 
 	lg.setStencilTest("greater", 0)
 	--BG
@@ -275,9 +279,9 @@ function code_editor:draw()
 	local str_left = string.format("Total lines: %d", #self.lines)
 	local str_center = string.format("'%s'", self.file)
 	local str_right = string.format("[%dx%d] [%dx%d]", self.cursor.x, self.cursor.y, self.scroll.x, self.scroll.y)
-	lg.printf(str_left, 0, self.height - self.font_height, self.width, "left")
-	lg.printf(str_center, 0, self.height - self.font_height, self.width, "center")
-	lg.printf(str_right, 0, self.height - self.font_height, self.width, "right")
+	lg.printf(str_left, self.x, self.height - self.font_height, self.width, "left")
+	lg.printf(str_center, self.x, self.height - self.font_height, self.width, "center")
+	lg.printf(str_right, self.x, self.height - self.font_height, self.width, "right")
 
 	lg.setStencilTest()
 	lg.setColor(r, g, b, a)

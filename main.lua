@@ -5,7 +5,7 @@ fs = love.filesystem
 function love.load()
         lex = require("lexer")
         code_editor = require("code_editor")
-        ce = code_editor.new(0, 0, lg.getWidth() / 2, lg.getHeight())
+        ce = code_editor.new(12, 12, 400, 500)
         font = lg.newFont("RobotoMono-Medium.ttf", 14)
         ce:set_font(font)
         ce:load("lexer.lua")
